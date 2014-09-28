@@ -1,0 +1,86 @@
+
+
+APPLY_BODY:
+	PUSH(FP);
+	MOV(FP,SP);
+
+	CMP(FPARG(1), IMM(2));
+	JUMP_GE(GOT_ENOUGH_ARGS_APPLY_BODY);
+	PUSH(FPARG(1));
+	PUSH(IMM(2));
+	CALL(THROW_WRONG_NUMBER_OF_ARGS);
+
+GOT_ENOUGH_ARGS_APPLY_BODY:
+
+	PUSH(R1);
+	PUSH(R2);
+	PUSH(R3);
+	PUSH(R4);
+	PUSH(R5);
+	PUSH(R6);
+
+	MOV(R0,FPARG(1));
+	INCR(R0);
+	/*list of arguments*/
+	MOV(R1,FPARG(R0));
+	/*closure pointer*/
+	MOV(R2,FPARG(2));
+	/*base of aguments*/
+	MOV(R3, SP);
+	/*Top of aguments*/
+	MOV(R6, SP);
+
+	/*will hold the number of args*/
+	MOV(R5,IMM(0));
+
+
+	MOV(R4, R1);
+ARGS_ON_STACK_LOOP:
+	CMP(R4, IMM(2));
+	JUMP_EQ(END_ARGS_ON_STACK_LOOP);
+	PUSH(INDD(R4,1));
+	INCR(R5);
+	MOV(R4,INDD(R4,2));
+	JUMP(ARGS_ON_STACK_LOOP);
+END_ARGS_ON_STACK_LOOP:
+	MOV(R6,SP);
+	DECR(R6);
+
+FLIP_ARGS_LOOP:
+	CMP(R3,R6);
+	JUMP_GE(END_FLIP_ARGS_LOOP);
+	MOV(R4,STACK(R3));
+	MOV(STACK(R3),STACK(R6));
+	MOV(STACK(R6),R4);
+	DECR(R6);
+	INCR(R3);
+	JUMP(FLIP_ARGS_LOOP);
+
+END_FLIP_ARGS_LOOP:
+
+	/*pushing rest of args from buttom to top*/
+	MOV(R1,FPARG(1));
+PUSH_REST_OF_ARGS:
+	CMP(R1, IMM(2));
+	JUMP_EQ(CALL_APPLICED_FUNCTION);
+	PUSH(FPARG(R1));
+	DECR(R1);
+	INCR(R5);
+	JUMP(PUSH_REST_OF_ARGS);
+
+CALL_APPLICED_FUNCTION:
+	PUSH(R5);
+	PUSH(INDD(R2,1));
+	CALLA(INDD(R2,2));
+	DROP(2);
+	DROP(R5);
+
+	POP(R6);
+	POP(R5);
+	POP(R4);
+	POP(R3);
+	POP(R2);
+	POP(R1);
+	MOV(SP,FP);
+	POP(FP);
+	RETURN;

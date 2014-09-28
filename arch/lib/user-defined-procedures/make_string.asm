@@ -1,0 +1,27 @@
+MAKE_STRING_BODY:
+	PUSH(FP);
+	MOV(FP,SP);
+	PUSH(R2);
+	PUSH(R3);
+	MOV(R2,FPARG(2));
+	MOV(R2,INDD(R2,1));/*we want it to hold num of args. in our case = 4*/
+	MOV(R4,R2);
+	MOV(R3,FPARG(3));		
+
+STRING_LOOP:
+	CMP(R2,IMM(0));
+	JUMP_EQ(END_STRING_LOOP);
+	PUSH(INDD(R3,1));
+	DECR(R2);
+	JUMP(STRING_LOOP);	
+
+END_STRING_LOOP:
+	PUSH(R4);
+	CALL(MAKE_SOB_STRING);
+	DROP(1);
+	POP(R4);
+	POP(R3);
+	POP(R2);
+	MOV(SP,FP);
+	POP(FP);
+	RETURN;
